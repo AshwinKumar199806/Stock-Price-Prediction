@@ -51,7 +51,7 @@ def plot_raw_data(data):
         fig.add_trace(go.Scatter(x=data.index,y=data[i],name=i[:-3]))
         fig.layout.update(title_text="Close Price of the Stock(s) over a period of time",xaxis_rangeslider_visible=True)
         fig.update_layout(
-        title="Recent Close Prices of stocks",
+        title="Closing Price of the Stock(s) over a period of time",
         xaxis_title="Date",
         yaxis_title="Close Price",
         legend_title="Company",
