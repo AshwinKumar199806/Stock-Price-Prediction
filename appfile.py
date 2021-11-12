@@ -21,7 +21,6 @@ warnings.filterwarnings('ignore')
 
 st.title("Stock Price Prediction using LSTM")
 st.write("Since the models are built from scratch to arrive at the prediction, the application will take some time to execute")
-st.subheader("Enter the ticker(s) of stock(s) for which close price has to be predicted")
 st.write("Only enter the tickers of stocks which are listed in NSE")
 no_stocks=(1,2,3,4,5,6,7,8,9,10)
 selected_stocks = st.selectbox("Enter the number of stocks",no_stocks) 
@@ -33,13 +32,13 @@ for i in range(1,selected_stocks+1):
         ticker=st.text_input(label="Ticker "+str(i))
     
     with row1_2:
-        price=st.text_input(label="Purchase Price "+str(i))
+        price=float(st.text_input(label="Purchase Price "+str(i)))
         
     with row1_3:
-        nou=st.text_input(label="Number of Units "+str(i))
+        nou=float(st.text_input(label="Number of Units "+str(i)))
     
     with row1_4:
-        er=st.text_input(label="Expected Return "+str(i))
+        er=float(st.text_input(label="Expected Return "+str(i)))
     l.append([ticker,price,nou,er])   
     
 d=pd.DataFrame(l,columns=['Ticker','Price','No of units','Expected Return'])
