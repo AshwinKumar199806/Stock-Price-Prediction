@@ -33,19 +33,19 @@ for i in range(1,selected_stocks+1):
         ticker=st.text_input(label="Ticker "+str(i))
     
     with row1_2:
-        price=st.number_input(label="Purchase Price "+str(i))
+        price=st.text_input(label="Purchase Price "+str(i))
         
     with row1_3:
-        nou=st.number_input(label="Number of Units "+str(i))
+        nou=st.text_input(label="Number of Units "+str(i))
     
     with row1_4:
-        er=st.number_input(label="Expected Return "+str(i))
+        er=st.text_input(label="Expected Return "+str(i))
     l.append([ticker,price,nou,er])   
     
 d=pd.DataFrame(l,columns=['Ticker','Price','No of units','Expected Return'])
-d['Expected Return'] = d['Expected Return'].astype('float')
-d['No of units'] = d['No of units'].astype('float')
-d['Price'] = d['Price'].astype('float')
+d['Expected Return'] = d['Expected Return'].astype('float64')
+d['No of units'] = d['No of units'].astype('float64')
+d['Price'] = d['Price'].astype('float64')
 d.set_index('Ticker',inplace=True)
 d.index = [str(x)+'.NS' for x in list(d.index).copy()]
 
