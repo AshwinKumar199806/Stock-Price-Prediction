@@ -16,7 +16,6 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
 from yahoofinancials import YahooFinancials
-
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -24,13 +23,32 @@ st.title("Stock Price Prediction using LSTM")
 st.write("Since the models are built from scratch to arrive at the prediction, the application will take some time to execute")
 st.subheader("Enter the ticker(s) of stock(s) for which close price has to be predicted")
 st.write("Only enter the tickers of stocks which are listed in NSE")
-st.write("If multiple stocks are entered, separate the tickers by commas")
-stocks = st.text_area(label="Stock(s)")
-a=stocks.split(',')
-stock_ticker = [str(x)+".NS" for x in a]
+no_stocks=(1,2,3,4,5,6,7,8,9,10)
+selected_stocks = st.selectbox("Enter the number of stocks",no_stocks) 
+l=[]     
+for i in range(1,selected_stocks+1):
+    row1_1, row1_2,row1_3,row1_4 = st.columns((1,1,1,1))
 
-
+    with row1_1:
+        ticker=st.text_input(label="Ticker "+str(i))
     
+    with row1_2:
+        price=st.number_input(label="Purchase Price "+str(i))
+        
+    with row1_3:
+        nou=st.number_input(label="Number of Units "+str(i))
+    
+    with row1_4:
+        er=st.number_input(label="Expected Return "+str(i))
+    l.append([ticker,price,nou,er])   
+    
+d=pd.DataFrame(l,columns=['Ticker','Price','No of units','Expected Return'])
+d['Expected Return'] = d['Expected Return'].astype('float')
+d['No of units'] = d['No of units'].astype('float')
+d['Price'] = d['Price'].astype('float')
+d.set_index('Ticker',inplace=True)
+d.index = [str(x)+'.NS' for x in list(d.index).copy()]
+
 @st.cache
 def load_data(tickers):
     maindf=pd.DataFrame()
@@ -43,7 +61,7 @@ def load_data(tickers):
         data.rename(columns={'formatted_date':'Date','close':'Close'},inplace=True)
         data.set_index('Date',inplace=True)
         maindf[i] = data['Close']
-    return maindf
+    return  maindf
 
 def plot_raw_data(data):
     fig=go.Figure()
@@ -51,7 +69,7 @@ def plot_raw_data(data):
         fig.add_trace(go.Scatter(x=data.index,y=data[i],name=i[:-3]))
         fig.layout.update(title_text="Close Price of the Stock(s) over a period of time",xaxis_rangeslider_visible=True)
         fig.update_layout(
-        title="Closing Price of the Stock(s) over a period of time",
+        title="Recent Close Prices of stocks",
         xaxis_title="Date",
         yaxis_title="Close Price",
         legend_title="Company",
@@ -108,17 +126,32 @@ def predictions(tickers,data):
   results["Prediction of Close Price"] = results["Prediction of Close Price"].apply(lambda x:round(x,2))
   return results
 
-if st.button("Forecast the Close Price of the Stock(s)"):
+stock_ticker=list(d.index)
+if st.checkbox("Forecast the Close Price of the Stock(s)"):
     data = load_data(stock_ticker)
     st.subheader('Recent Prices of the Stock(s)')
-    st.write(data.tail())
+    st.dataframe(data.tail().style.format("{:.2f}"))
     plot_raw_data(data)
     result = predictions(stock_ticker,data)
+    final=pd.concat([d,result],axis=1)
+    final['Bought Price'] = (final['Price'].astype('float'))*final['No of units'].astype('int')
+    final['Expected Price'] = (final['Prediction of Close Price'].astype('float'))*(final['No of units'].astype('int'))
+    final['Predicted Return'] = (((final['Expected Price'] - final['Bought Price'])/final['Bought Price'])*100)
+    final['+/-'] = final['Predicted Return'] >= final['Expected Return']
+    final['+/-'].replace({True:"+",False:"-"},inplace=True)
+    pred_port=((final['Expected Price'].sum() - final['Bought Price'].sum() )/ final['Bought Price'].sum())*100
     st.subheader('Forecasted Value(s)')
     st.write("The training data is available until ",(pd.to_datetime(data.index[-1]).strftime('%d %B, %Y')),". The prediction of close price at the end of next trading day is as follows")
-    st.write(result)
-    
-
-    
-
- 
+    st.dataframe(pd.DataFrame(final['Prediction of Close Price']).style.format(({"Prediction of Close Price": "{:.2f}"})))
+    st.subheader('Comparison of Returns')
+    st.dataframe(final[['Expected Return','Predicted Return','+/-']].style.format(({"Expected Return": "{:.2f}","Predicted Return": "{:.1f}"})))
+    if st.checkbox(label="Check here if you consider the stocks entered as portfolio"):
+        exp_ret=st.number_input(label="Enter the expected rate of return of the portfolio")
+        if exp_ret!=0.00 :
+            st.write("Predicted rate of return of the portfolio is " + str(np.round(pred_port,2)))
+            if pred_port < float(exp_ret):
+                st.error('Portfolio is not performing upto expectation')
+            else:
+                st.success('Portfolio is performing upto expectation')
+        else:
+            st.error("Enter expected rate of return of portfolio")
